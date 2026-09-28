@@ -8,6 +8,9 @@ if (!isset($_SESSION['login']) || $_SESSION['role'] != 'dosen') {
     exit;
 }
 
+header("Location: kalender.php");
+exit;
+
 $user_id = $_SESSION['user_id'];
 
 

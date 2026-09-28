@@ -34,7 +34,7 @@ if (isset($_POST['login'])) {
             }
 
             if ($user['role'] == 'dosen') {
-                header("Location: dosen/index.php");
+                header("Location: User/index.php");
                 exit;
             }
 

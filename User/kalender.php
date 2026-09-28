@@ -3,7 +3,7 @@
 session_start();
 include "../config/database.php";
 
-if (!isset($_SESSION['login'])) {
+if (!isset($_SESSION['login']) || $_SESSION['role'] != 'dosen') {
     header("Location: ../login.php");
     exit;
 }
@@ -496,10 +496,10 @@ body {
 
 
 <a
-    href="index.php"
+    href="booking_saya.php"
     class="back">
 
-    ← Dashboard
+    ← Booking Saya
 
 </a>
 
