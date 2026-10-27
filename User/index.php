@@ -8,75 +8,85 @@ if (!isset($_SESSION['login']) || $_SESSION['role'] != 'dosen') {
     exit;
 }
 
-header("Location: kalender.php");
-exit;
 
-$user_id = $_SESSION['user_id'];
+// ==========================================
+// BULAN & TAHUN
+// ==========================================
+
+$bulan = isset($_GET['bulan'])
+    ? (int) $_GET['bulan']
+    : date('n');
+
+$tahun = isset($_GET['tahun'])
+    ? (int) $_GET['tahun']
+    : date('Y');
+
+
+// Validasi bulan
+if ($bulan < 1) {
+    $bulan = 12;
+    $tahun--;
+}
+
+if ($bulan > 12) {
+    $bulan = 1;
+    $tahun++;
+}
 
 
 // ==========================================
-// JUMLAH BOOKING
+// JUMLAH HARI
 // ==========================================
 
-$q_total = mysqli_query($conn, "
-    SELECT COUNT(*) AS total
-    FROM bookings
-    WHERE user_id = $user_id
-");
-
-$total_booking = mysqli_fetch_assoc($q_total)['total'];
+$jumlah_hari = cal_days_in_month(
+    CAL_GREGORIAN,
+    $bulan,
+    $tahun
+);
 
 
-// ==========================================
-// BOOKING MENUNGGU
-// ==========================================
+// Hari pertama
+$hari_pertama = date(
+    'N',
+    strtotime("$tahun-$bulan-01")
+);
 
-$q_menunggu = mysqli_query($conn, "
-    SELECT COUNT(*) AS total
-    FROM bookings
-    WHERE user_id = $user_id
-    AND status = 'menunggu'
-");
-
-$menunggu = mysqli_fetch_assoc($q_menunggu)['total'];
-
-
-// ==========================================
-// BOOKING DISETUJUI
-// ==========================================
-
-$q_disetujui = mysqli_query($conn, "
-    SELECT COUNT(*) AS total
-    FROM bookings
-    WHERE user_id = $user_id
-    AND status = 'disetujui'
-");
-
-$disetujui = mysqli_fetch_assoc($q_disetujui)['total'];
+$nama_bulan = [
+    1 => 'Januari',
+    2 => 'Februari',
+    3 => 'Maret',
+    4 => 'April',
+    5 => 'Mei',
+    6 => 'Juni',
+    7 => 'Juli',
+    8 => 'Agustus',
+    9 => 'September',
+    10 => 'Oktober',
+    11 => 'November',
+    12 => 'Desember'
+];
 
 
 // ==========================================
-// BOOKING TERBARU
+// NAVIGASI
 // ==========================================
 
-$booking_terbaru = mysqli_query($conn, "
-    SELECT
-        bookings.*,
-        rooms.nama_room,
-        rooms.gedung
+$prev_bulan = $bulan - 1;
+$prev_tahun = $tahun;
 
-    FROM bookings
+if ($prev_bulan < 1) {
+    $prev_bulan = 12;
+    $prev_tahun--;
+}
 
-    JOIN rooms
-        ON bookings.room_id = rooms.id
 
-    WHERE bookings.user_id = $user_id
+$next_bulan = $bulan + 1;
+$next_tahun = $tahun;
 
-    ORDER BY bookings.tanggal DESC,
-             bookings.jam_mulai DESC
-
-    LIMIT 5
-");
+if ($next_bulan > 12) {
+    $next_bulan = 1;
+    $next_tahun++;
+}
 
 ?>
 
@@ -87,9 +97,11 @@ $booking_terbaru = mysqli_query($conn, "
 
 <meta charset="UTF-8">
 
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0">
 
-<title>Dashboard Dosen - FKG UNPAD</title>
+<title>Kalender Room - FKG UNPAD</title>
 
 <style>
 
@@ -99,228 +111,284 @@ $booking_terbaru = mysqli_query($conn, "
 
 body {
     margin: 0;
-    font-family: Arial, sans-serif;
+
+    font-family: Arial;
+
     background: #f4f6f9;
-    color: #333;
 }
-
-
-/* ================================
-   NAVBAR
-================================ */
-
-.navbar {
-    background: #1e3a5f;
-    color: white;
-    padding: 18px 40px;
-
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.logo {
-    font-size: 20px;
-    font-weight: bold;
-}
-
-.user {
-    display: flex;
-    align-items: center;
-    gap: 15px;
-}
-
-.logout {
-    color: white;
-    text-decoration: none;
-    padding: 8px 14px;
-    border: 1px solid rgba(255,255,255,.5);
-    border-radius: 5px;
-}
-
-
-/* ================================
-   CONTAINER
-================================ */
 
 .container {
+
     width: 1100px;
-    max-width: 94%;
-    margin: 35px auto;
+
+    max-width: 95%;
+
+    margin: 30px auto;
+
 }
 
-.welcome h1 {
-    margin-bottom: 5px;
+
+/* ==========================
+   HEADER
+========================== */
+
+.header {
+
+    display: flex;
+
+    justify-content:
+        space-between;
+
+    align-items: center;
+
+    margin-bottom: 20px;
+
+}
+
+.header h1 {
+
     color: #1e3a5f;
+
+    margin-bottom: 5px;
+
 }
 
-.welcome p {
-    color: #777;
-}
-
-
-/* ================================
-   MENU
-================================ */
-
-.menu {
-    display: grid;
-    grid-template-columns:
-        repeat(3, 1fr);
-
-    gap: 20px;
-
-    margin-top: 30px;
-}
-
-.menu-card {
-    background: white;
-    padding: 25px;
-    border-radius: 12px;
+.back {
 
     text-decoration: none;
-    color: #333;
+
+    color: #1e3a5f;
+
+}
+
+
+/* ==========================
+   CALENDAR HEADER
+========================== */
+
+.calendar {
+
+    background: white;
+
+    border-radius: 12px;
+
+    overflow: hidden;
 
     box-shadow:
-        0 3px 12px rgba(0,0,0,.07);
+        0 3px 15px rgba(0,0,0,.08);
 
-    transition: .2s;
 }
 
-.menu-card:hover {
-    transform: translateY(-3px);
+.calendar-header {
+
+    padding: 20px;
+
+    display: flex;
+
+    justify-content:
+        space-between;
+
+    align-items: center;
+
+    border-bottom:
+        1px solid #eee;
+
 }
 
-.menu-icon {
-    font-size: 35px;
-    margin-bottom: 10px;
-}
+.calendar-header h2 {
 
-.menu-card h3 {
+    margin: 0;
+
     color: #1e3a5f;
-    margin: 5px 0;
+
 }
 
-.menu-card p {
-    color: #777;
-    font-size: 14px;
+.nav-btn {
+
+    text-decoration: none;
+
+    padding: 8px 14px;
+
+    background: #1e3a5f;
+
+    color: white;
+
+    border-radius: 6px;
+
 }
 
 
-/* ================================
-   STATISTIK
-================================ */
+/* ==========================
+   WEEK
+========================== */
 
-.stats {
+.week {
+
     display: grid;
 
     grid-template-columns:
-        repeat(3, 1fr);
+        repeat(7, 1fr);
+
+    background: #1e3a5f;
+
+    color: white;
+
+}
+
+.week div {
+
+    padding: 12px;
+
+    text-align: center;
+
+    font-weight: bold;
+
+}
+
+
+/* ==========================
+   DAYS
+========================== */
+
+.days {
+
+    display: grid;
+
+    grid-template-columns:
+        repeat(7, 1fr);
+
+}
+
+.day {
+
+    min-height: 130px;
+
+    border-right:
+        1px solid #eee;
+
+    border-bottom:
+        1px solid #eee;
+
+    padding: 8px;
+
+}
+
+.empty {
+
+    background: #f8f9fa;
+
+}
+
+.number {
+
+    font-weight: bold;
+
+    margin-bottom: 8px;
+
+    color: #555;
+
+}
+
+.today {
+
+    background: #eef5ff;
+
+}
+    .day {
+    position: relative;
+    } 
+
+    .number-link {
+    color: inherit;
+    text-decoration: none;
+    }
+
+    .number-link:hover {
+    text-decoration: underline;
+     }
+
+/* Hari kosong: seluruh kotak bisa diklik */
+    .day.free .number-link::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    }
+
+    .day.free:hover {
+    background: #eaf7ee;
+    cursor: pointer;
+    }
+
+    .day.lewat {
+    background: #f1f3f5;
+    cursor: default;
+}
+
+.day.lewat .number {
+    color: #aaa;
+}
+/* ==========================
+   LEGEND
+========================== */
+
+.legend {
+
+    padding: 15px;
+
+    display: flex;
 
     gap: 20px;
 
-    margin-top: 30px;
+    font-size: 13px;
+
 }
 
-.stat {
-    background: white;
-    padding: 20px;
-    border-radius: 10px;
+.legend span {
 
-    box-shadow:
-        0 3px 12px rgba(0,0,0,.06);
+    display: inline-flex;
+
+    align-items: center;
+
+    gap: 5px;
+
 }
 
-.stat-number {
-    font-size: 30px;
-    font-weight: bold;
-    color: #1e3a5f;
+.dot {
+
+    width: 10px;
+
+    height: 10px;
+
+    border-radius: 50%;
+
+    display: inline-block;
+
 }
 
-.stat-label {
-    color: #777;
+.red {
+    background: #c0392b;
 }
 
-
-/* ================================
-   TABLE
-================================ */
-
-.section {
-    background: white;
-    margin-top: 30px;
-    padding: 25px;
-    border-radius: 10px;
-
-    box-shadow:
-        0 3px 12px rgba(0,0,0,.06);
+.yellow {
+    background: #f1c40f;
 }
 
-.section h2 {
-    color: #1e3a5f;
-}
-
-table {
-    width: 100%;
-    border-collapse: collapse;
-}
-
-th,
-td {
-    padding: 13px;
-    text-align: left;
-    border-bottom: 1px solid #eee;
-}
-
-th {
-    color: #1e3a5f;
-}
-
-.status {
-    padding: 6px 10px;
-    border-radius: 15px;
-    font-size: 12px;
-}
-
-.menunggu {
-    background: #fff3cd;
-    color: #856404;
-}
-
-.disetujui {
-    background: #d5f5e3;
-    color: #1e8449;
-}
-
-.ditolak {
-    background: #fadbd8;
-    color: #922b21;
-}
-
-.dibatalkan {
-    background: #eee;
-    color: #555;
+.green {
+    background: #27ae60;
 }
 
 
 @media(max-width: 700px) {
 
-    .menu,
-    .stats {
-        grid-template-columns: 1fr;
+    .day {
+
+        min-height: 90px;
+
     }
 
-    .navbar {
-        padding: 15px;
-    }
+    .week div {
 
-    .container {
-        max-width: 92%;
-    }
-
-    table {
-        font-size: 13px;
-    }
+        font-size: 11px;
 
 }
 
@@ -331,252 +399,152 @@ th {
 <body>
 
 
-<!-- NAVBAR -->
-
-<div class="navbar">
-
-    <div class="logo">
-        FKG UNPAD
-    </div>
-
-    <div class="user">
-
-        👤
-        <?= htmlspecialchars($_SESSION['nama']); ?>
-
-        <a
-            href="../logout.php"
-            class="logout">
-
-            Logout
-
-        </a>
-
-    </div>
-
-</div>
-
-
 <div class="container">
 
 
-<!-- WELCOME -->
+<div class="header">
 
-<div class="welcome">
+<div>
 
-    <h1>
-        Dashboard Dosen
-    </h1>
+<h1>
+    📅 Kalender Room
+</h1>
 
-    <p>
-        Selamat datang di Sistem Manajemen Room FKG UNPAD.
-    </p>
+<p>
+    Jadwal penggunaan ruangan FKG UNPAD
+</p>
 
 </div>
-
-
-<!-- MENU -->
-
-<div class="menu">
-
-
-<a
-    href="kalender.php"
-    class="menu-card">
-
-    <div class="menu-icon">
-        📅
-    </div>
-
-    <h3>
-        Kalender Room
-    </h3>
-
-    <p>
-        Lihat jadwal dan ketersediaan ruangan.
-    </p>
-
-</a>
-
-
-<a
-    href="booking.php"
-    class="menu-card">
-
-    <div class="menu-icon">
-        ➕
-    </div>
-
-    <h3>
-        Booking Room
-    </h3>
-
-    <p>
-        Ajukan pemakaian ruangan.
-    </p>
-
-</a>
 
 
 <a
     href="booking_saya.php"
-    class="menu-card">
+    class="back">
 
-    <div class="menu-icon">
-        📋
-    </div>
-
-    <h3>
-        Booking Saya
-    </h3>
-
-    <p>
-        Lihat status pemesanan room.
-    </p>
+    Booking Saya
 
 </a>
 
 </div>
 
 
-<!-- STATISTIK -->
-
-<div class="stats">
+<div class="calendar">
 
 
-<div class="stat">
+<!-- HEADER -->
 
-    <div class="stat-number">
-        <?= $total_booking; ?>
-    </div>
+<div class="calendar-header">
 
-    <div class="stat-label">
-        Total Booking
-    </div>
+<a
+    class="nav-btn"
+    href="?bulan=<?= $prev_bulan; ?>&tahun=<?= $prev_tahun; ?>">
 
-</div>
+    ←
 
+</a>
 
-<div class="stat">
-
-    <div class="stat-number">
-        <?= $menunggu; ?>
-    </div>
-
-    <div class="stat-label">
-        Menunggu Persetujuan
-    </div>
-
-</div>
-
-
-<div class="stat">
-
-    <div class="stat-number">
-        <?= $disetujui; ?>
-    </div>
-
-    <div class="stat-label">
-        Booking Disetujui
-    </div>
-
-</div>
-
-
-</div>
-
-
-<!-- BOOKING TERBARU -->
-
-<div class="section">
 
 <h2>
-    📋 Booking Terbaru
+
+<?= $nama_bulan[$bulan]; ?>
+
+<?= $tahun; ?>
+
 </h2>
 
 
-<table>
+<a
+    class="nav-btn"
+    href="?bulan=<?= $next_bulan; ?>&tahun=<?= $next_tahun; ?>">
 
-<tr>
+    →
 
-    <th>Acara</th>
-    <th>Room</th>
-    <th>Tanggal</th>
-    <th>Waktu</th>
-    <th>Status</th>
-
-</tr>
-
-
-<?php if (mysqli_num_rows($booking_terbaru) == 0): ?>
-
-<tr>
-
-    <td colspan="5">
-        Belum ada booking.
-    </td>
-
-</tr>
-
-<?php endif; ?>
-
-
-<?php while ($data = mysqli_fetch_assoc($booking_terbaru)): ?>
-
-<tr>
-
-    <td>
-        <?= htmlspecialchars($data['nama_acara']); ?>
-    </td>
-
-    <td>
-        <?= htmlspecialchars($data['nama_room']); ?>
-    </td>
-
-    <td>
-        <?= date(
-            'd-m-Y',
-            strtotime($data['tanggal'])
-        ); ?>
-    </td>
-
-    <td>
-
-        <?= substr(
-            $data['jam_mulai'],
-            0,
-            5
-        ); ?>
-
-        -
-
-        <?= substr(
-            $data['jam_selesai'],
-            0,
-            5
-        ); ?>
-
-    </td>
-
-    <td>
-
-        <span
-            class="status <?= $data['status']; ?>">
-
-            <?= ucfirst($data['status']); ?>
-
-        </span>
-
-    </td>
-
-</tr>
-
-<?php endwhile; ?>
-
-</table>
+</a>
 
 </div>
 
+
+<!-- HARI -->
+
+<div class="week">
+
+<div>Sen</div>
+<div>Sel</div>
+<div>Rab</div>
+<div>Kam</div>
+<div>Jum</div>
+<div>Sab</div>
+<div>Min</div>
+
+</div>
+
+
+<!-- TANGGAL -->
+
+<div class="days">
+
+
+<?php for (
+    $i = 1;
+    $i < $hari_pertama;
+    $i++
+): ?>
+
+<div class="day empty"></div>
+
+<?php endfor; ?>
+
+
+<?php for (
+    $hari = 1;
+    $hari <= $jumlah_hari;
+    $hari++
+): ?>
+
+
+<?php
+
+$tanggal_full = sprintf(
+    '%04d-%02d-%02d',
+    $tahun,
+    $bulan,
+    $hari
+);
+
+$is_today = $tanggal_full == date('Y-m-d');
+
+$bisa_booking = $tanggal_full >= date('Y-m-d');
+
+?>
+
+
+<div class="day <?= $is_today ? 'today' : ''; ?> <?= $bisa_booking ? 'free' : 'lewat'; ?>">
+
+    <div class="number">
+
+        <?php if ($bisa_booking): ?>
+
+            <a href="pilih_jadwal.php?tanggal=<?= $tanggal_full; ?>" class="number-link">
+                <?= $hari; ?>
+            </a>
+
+        <?php else: ?>
+
+            <span><?= $hari; ?></span>
+
+        <?php endif; ?>
+
+    </div>
+
+</div>
+
+
+<?php endfor; ?>
+
+
+</div>
+
+</div>
 
 </div>
 

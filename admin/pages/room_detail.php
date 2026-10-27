@@ -1,6 +1,5 @@
 <?php
 
-session_start();
 
 include "../config/database.php";
 
@@ -106,7 +105,7 @@ if (!$data) {
         <?= htmlspecialchars($data['status']); ?>
     </div>
 
-    <a href="room.php">
+     <a href="index.php?page=room" class="batal-link" style="margin-left:0;">
         ← Kembali
     </a>
 

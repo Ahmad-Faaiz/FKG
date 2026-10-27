@@ -1,7 +1,5 @@
 <?php
 
-session_start();
-
 include "../config/database.php";
 
 if (!isset($_SESSION['login']) || $_SESSION['role'] != 'admin') {
@@ -70,8 +68,7 @@ if (isset($_POST['update'])) {
 
     if (mysqli_query($conn, $query)) {
 
-        header("Location: room.php");
-
+        header("Location: index.php?page=room");
         exit;
 
     } else {
@@ -226,10 +223,9 @@ if (isset($_POST['update'])) {
             Update Room
         </button>
 
-        <a href="room.php">
-            Batal
-        </a>
-
+     <a href="index.php?page=room" class="batal-link" style="margin-left:0;">
+        batal
+    </a>
     </form>
 
 </div>

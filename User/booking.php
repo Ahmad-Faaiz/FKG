@@ -26,6 +26,11 @@ $tanggal_selected = isset($_GET['tanggal'])
     ? $_GET['tanggal']
     : date('Y-m-d');
 
+$jam_mulai_selected = isset($_GET['jam_mulai'])
+    ? $_GET['jam_mulai'] : '';
+
+$jam_selesai_selected = isset($_GET['jam_selesai']) 
+    ? $_GET['jam_selesai'] : '';
 
 // ==========================================
 // PROSES BOOKING
@@ -48,15 +53,30 @@ if (isset($_POST['booking'])) {
         $conn,
         $_POST['keterangan']
     );
-
-
+    
     // ==========================================
     // CEK JAM
     // ==========================================
+      
+    $pola_jam = '/^([01]\d|2[0-3]):[0-5]\d$/';
 
-    if ($jam_mulai >= $jam_selesai) {
+    if (!preg_match($pola_jam, $jam_mulai) ||
+        !preg_match($pola_jam, $jam_selesai)) {
+
+        $error = "Format jam tidak valid.";
+    } elseif ($jam_mulai >= $jam_selesai) {
 
         $pesan = "Jam selesai harus lebih besar dari jam mulai.";
+        $tipe_pesan = "error";
+    
+    } elseif ($tanggal < date('Y-m-d')) {
+
+        $pesan = "Tanggal yang dipilih sudah lewat.";
+        $tipe_pesan = "error";
+
+    } elseif ($tanggal == date('Y-m-d') && $jam_mulai <= date('H:i', strtotime('+1 hour'))) {
+
+        $pesan = "Jam mulai sudah lewat. Pilih jam setelah " . date('H:i', strtotime('+1 hour')) . ".";
         $tipe_pesan = "error";
 
     } else {
@@ -354,9 +374,7 @@ button:hover {
 <div class="container">
 
 <nav class="navigation" aria-label="Navigasi dosen">
-    <a href="index.php">← Dashboard</a>
-    <a href="kalender.php">Kembali ke Kalender</a>
-    <a href="booking_saya.php">Booking Saya</a>
+    <a href="pilih_jadwal.php">← kembali</a>
 </nav>
 
 
@@ -392,7 +410,6 @@ sampai disetujui oleh admin.
 
 
 <form method="POST">
-
 
 <label>
 Nama Acara
@@ -465,32 +482,37 @@ Kapasitas
 
 
 <div>
-
-<label>
-Jam Mulai
-</label>
-
-<input
-    type="time"
-    name="jam_mulai"
-    required
->
-
+    <label>Jam Mulai</label>
+    <input
+        type="text"
+        name="jam_mulai"
+        class="jam-input"
+        value="<?= htmlspecialchars($jam_mulai_selected); ?>"
+        placeholder="08:00"
+        maxlength="5"
+        inputmode="numeric"
+        pattern="([01][0-9]|2[0-3]):[0-5][0-9]"
+        title="Format 24 jam, contoh: 08:00 atau 13:30"
+        autocomplete="off"
+        required
+    >
 </div>
 
-
 <div>
-
-<label>
-Jam Selesai
-</label>
-
-<input
-    type="time"
-    name="jam_selesai"
-    required
->
-
+    <label>Jam Selesai</label>
+    <input
+        type="text"
+        name="jam_selesai"
+        class="jam-input"
+        value="<?= htmlspecialchars($jam_selesai_selected); ?>"
+        placeholder="10:00"
+        maxlength="5"
+        inputmode="numeric"
+        pattern="([01][0-9]|2[0-3]):[0-5][0-9]"
+        title="Format 24 jam, contoh: 08:00 atau 13:30"
+        autocomplete="off"
+        required
+    >
 </div>
 
 
@@ -532,17 +554,22 @@ Keterangan
 </form>
 
 </div>
+<script>
+document.querySelectorAll('.jam-input').forEach(function (input) {
 
-</div>
+    input.addEventListener('input', function () {
 
-</body>
+        var angka = this.value.replace(/\D/g, '').slice(0, 4);
 
-</html>
+        if (angka.length > 2) {
+            angka = angka.slice(0, 2) + ':' + angka.slice(2);
+        }
 
-</div>
+        this.value = angka;
+    });
 
-</div>
-
+});
+</script>
 </body>
 
 </html>

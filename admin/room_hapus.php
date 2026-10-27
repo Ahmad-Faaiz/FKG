@@ -16,6 +16,6 @@ mysqli_query(
     "DELETE FROM rooms WHERE id = $id"
 );
 
-header("Location: room.php");
+header("Location: index.php?page=room");
 
 exit;

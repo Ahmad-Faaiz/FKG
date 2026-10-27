@@ -19,5 +19,5 @@ mysqli_query($conn, "
     WHERE id = $id
 ");
 
-header("Location: user.php");
+header("Location: index.php?page=user");
 exit;

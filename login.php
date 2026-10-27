@@ -277,9 +277,11 @@ Sistem Manajemen Room
 
 </button>
 
-
 </form>
 
+<p style="text-align: center;">
+    Belum punya akun? <a href="register.php">Daftar</a>
+</p>
 
 </div>
 
