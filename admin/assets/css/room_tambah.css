@@ -1,0 +1,8 @@
+.form-card {
+    width: 400px;
+    margin: 30px auto;
+    padding: 25px;
+    background: white;
+    border-radius: 10px;
+    box-sizing: border-box;
+}

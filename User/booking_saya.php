@@ -34,74 +34,7 @@ $query = mysqli_query($conn, "
 
     <title>Booking Saya</title>
 
-    <style>
-
-        body {
-            font-family: Arial;
-            background: #f4f6f9;
-            margin: 0;
-        }
-
-        .container {
-            padding: 30px;
-        }
-
-        h1 {
-            color: #1e3a5f;
-        }
-
-        .back {
-            display: inline-block;
-            margin-bottom: 20px;
-            color: #1e3a5f;
-            text-decoration: none;
-        }
-
-        table {
-            width: 100%;
-            background: white;
-            border-collapse: collapse;
-        }
-
-        th,
-        td {
-            padding: 14px;
-            border-bottom: 1px solid #ddd;
-            text-align: left;
-        }
-
-        th {
-            background: #1e3a5f;
-            color: white;
-        }
-
-        .status {
-            padding: 6px 10px;
-            border-radius: 15px;
-            font-size: 13px;
-        }
-
-        .menunggu {
-            background: #fff3cd;
-            color: #856404;
-        }
-
-        .disetujui {
-            background: #d5f5e3;
-            color: #1e8449;
-        }
-
-        .ditolak {
-            background: #fadbd8;
-            color: #922b21;
-        }
-
-        .dibatalkan {
-            background: #eee;
-            color: #555;
-        }
-
-    </style>
+    <link rel="stylesheet" href="assets/css/booking_saya.css">
 
 </head>
 

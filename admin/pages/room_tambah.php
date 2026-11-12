@@ -26,16 +26,7 @@ if (isset($_POST['simpan'])) {
 }
 
 ?>
-    <style>
-.form-card {
-    width: 400px;
-    margin: 30px auto;
-    padding: 25px;
-    background: white;
-    border-radius: 10px;
-    box-sizing: border-box;
-}
-</style>
+    <link rel="stylesheet" href="assets/css/room_tambah.css">
 
 <div class="form-card">
 
