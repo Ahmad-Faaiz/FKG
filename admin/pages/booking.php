@@ -47,12 +47,7 @@ if (isset($_GET['aksi']) && isset($_GET['id'])) {
 
         if (mysqli_num_rows($bentrok) > 0) {
 
-            echo "
-            <script>
-                alert('Booking tidak dapat disetujui karena jadwal bentrok!');
-                window.location = 'index.php?page=booking';
-            </script>
-            ";
+            echo '<script src="assets/js/booking.js" data-conflict="1"></script>';
 
             exit;
         }
@@ -151,13 +146,13 @@ $query = mysqli_query($conn, "
 
                 <a href="index.php?page=booking&aksi=setujui&id=<?= $data['id']; ?>"
                    class="setuju"
-                   onclick="return confirm('Setujui booking ini?')">
+                   data-confirm="Setujui booking ini?">
                     ✓ Setujui
                 </a>
 
                 <a href="index.php?page=booking&aksi=tolak&id=<?= $data['id']; ?>"
                    class="tolak"
-                   onclick="return confirm('Tolak booking ini?')">
+                   data-confirm="Tolak booking ini?">
                     ✕ Tolak
                 </a>
 
@@ -165,7 +160,7 @@ $query = mysqli_query($conn, "
 
                 <a href="index.php?page=booking&aksi=batalkan&id=<?= $data['id']; ?>"
                    class="batal"
-                   onclick="return confirm('Batalkan booking ini?')">
+                   data-confirm="Batalkan booking ini?">
                     Batalkan
                 </a>
 
@@ -181,3 +176,5 @@ $query = mysqli_query($conn, "
     <?php endwhile; ?>
 
 </table>
+
+<script src="assets/js/booking.js"></script>
